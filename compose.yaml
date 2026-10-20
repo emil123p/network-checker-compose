@@ -1,0 +1,11 @@
+services:
+  network-checker:
+    image: ghcr.io/emil123p/network-checker:latest
+    entrypoint: ["/bin/sh", "/app/monitor.sh"]
+    environment:
+      CHECK_HOST: ${CHECK_HOST:-github.com}
+      CHECK_INTERVAL: ${CHECK_INTERVAL:-30}
+    volumes:
+      - ./logs:/app/logs
+      - ./monitor.sh:/app/monitor.sh:ro
+    restart: unless-stopped
