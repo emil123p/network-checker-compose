@@ -1,6 +1,6 @@
 services:
   network-checker:
-    image: ghcr.io/emil123p/network-checker:latest
+    image: ghcr.io/emil123p/network-checker:sha-251287c
     entrypoint: ["/bin/sh", "/app/monitor.sh"]
     environment:
       CHECK_HOST: ${CHECK_HOST:-github.com}
