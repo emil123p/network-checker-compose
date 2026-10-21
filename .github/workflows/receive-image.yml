@@ -1,0 +1,33 @@
+name: Receive network-checker image update
+
+on:
+  repository_dispatch:
+    types: [network-checker-image-published]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-image:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Validate received image tag
+        env:
+          IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$IMAGE_TAG" =~ ^sha-[0-9a-f]{7,40}$ ]]; then
+            echo "Invalid image tag: $IMAGE_TAG"
+            exit 1
+          fi
+
+          echo "Received image tag: $IMAGE_TAG"
+
+      - name: Verify image exists in GHCR
+        env:
+          IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
+        run: |
+          docker manifest inspect \
+            "ghcr.io/emil123p/network-checker:${IMAGE_TAG}"
