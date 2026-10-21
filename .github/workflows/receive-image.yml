@@ -5,13 +5,17 @@ on:
     types: [network-checker-image-published]
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   validate-image:
     runs-on: ubuntu-24.04
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
       - name: Validate received image tag
         env:
           IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
@@ -19,7 +23,7 @@ jobs:
           set -euo pipefail
 
           if [[ ! "$IMAGE_TAG" =~ ^sha-[0-9a-f]{7,40}$ ]]; then
-            echo "Invalid image tag: $IMAGE_TAG"
+            echo "Invalid image tag"
             exit 1
           fi
 
@@ -29,5 +33,48 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
         run: |
+          set -euo pipefail
           docker manifest inspect \
             "ghcr.io/emil123p/network-checker:${IMAGE_TAG}"
+
+      - name: Update image tag in compose.yaml
+        env:
+          IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("compose.yaml")
+          content = path.read_text()
+          image = "ghcr.io/emil123p/network-checker:"
+          pattern = re.escape(image) + r"sha-[0-9a-f]{7,40}"
+
+          updated, count = re.subn(
+              pattern,
+              image + os.environ["IMAGE_TAG"],
+              content,
+          )
+
+          if count != 1:
+              raise SystemExit(
+                  f"Expected exactly one image tag, found {count}"
+              )
+
+          path.write_text(updated)
+          PY
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update network-checker image"
+          title: "Update network-checker Docker image"
+          body: |
+            A new network-checker image has been published and verified.
+
+            This PR updates the pinned image tag in compose.yaml.
+            Review the change before merging and deploying.
+          branch: automation/update-network-checker-image
+          delete-branch: true
