@@ -1,10 +1,11 @@
 [Unit]
 Description=Check and deploy Network Checker Compose updates
 Wants=network-online.target
-After=network-online.target docker.service
+After=network-online.target snap.docker.dockerd.service
 
 [Service]
 Type=oneshot
 User=emil-paziuk
+Environment=HOME=/home/emil-paziuk
 WorkingDirectory=/home/emil-paziuk/network-checker-compose
 ExecStart=/home/emil-paziuk/network-checker-compose/deploy-update.sh
