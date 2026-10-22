@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for Network Checker Compose updates periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Unit=network-checker-deploy.service
+
+[Install]
+WantedBy=timers.target
