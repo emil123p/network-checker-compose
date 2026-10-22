@@ -91,7 +91,9 @@ GitHub Actions runs validation on pushes to `main` and pull requests targeting `
 
 The workflow checks Python syntax and validates the Docker Compose configuration.
 
-The application repository also builds and publishes Docker images to GitHub Container Registry (GHCR). When a new image is published, an event can trigger an update pull request in this deployment repository. The deployment change is applied after that pull request is merged.
+The application repository also builds and publishes Docker images to GitHub Container Registry (GHCR).
+When a new image is published, an event can trigger an update pull request in this deployment repository.
+The deployment change is applied after that pull request is merged.
 
 ## Automatic Deployment Updates
 
@@ -103,7 +105,8 @@ The script:
 2. Fetches the latest state of `main`.
 3. Checks the commit history to avoid unexpected history changes.
 4. Detects changes to `compose.yaml` and `monitor.sh`.
-5. Validates the Compose configuration, pulls the image, and runs `docker compose up -d` when relevant files have changed.
+5. Validates the Compose configuration, pulls the image, and runs `docker compose up -d`
+   when relevant files have changed.
 6. Records the processed commit after a successful update.
 
 Run the script manually from the repository directory:
@@ -120,23 +123,46 @@ The last processed commit is stored locally on the Ubuntu host at:
 
 `~/.local/state/network-checker-compose/last-deployed-commit`
 
-This file is specific to the host and is not tracked by Git. It records the deployment script's processing state; it is not a monitoring log.
+This file is specific to the host and is not tracked by Git.
+It records the deployment script's processing state; it is not a monitoring log.
 
 ### Periodic execution
 
-A `systemd` service and timer are planned to run the script periodically. They still need to be configured on the Ubuntu host.
+A `systemd` service and timer are configured on the Ubuntu host.
+Their source files are stored in the repository under `systemd/` and linked from `/etc/systemd/system/`.
 
-The host must be powered on and connected to the network for updates to be checked and deployed. If it is powered off, the next check can happen only after it starts and the timer runs.
+The timer is enabled and starts automatically with Ubuntu.
+It runs the deployment check approximately 2 minutes after boot and then every 5 minutes.
+
+- Service: `network-checker-deploy.service`
+- Timer: `network-checker-deploy.timer`
+
+Check the timer schedule:
+
+```bash
+systemctl list-timers network-checker-deploy.timer
+```
+
+Check the service logs:
+
+```bash
+journalctl -u network-checker-deploy.service --no-pager
+```
+
+The host must be powered on and connected to the network for updates to be checked and deployed.
+If it is powered off, checks resume after the next startup.
 
 ## Limitations
 
-- Monitoring and automatic deployment checks are available only while the host is running and connected to the network.
+- Monitoring and automatic deployment checks are available only while the host is running
+  and connected to the network.
 - The tool checks TCP connectivity on port 443; it does not verify the full health of an application or website.
 - Deployment automation depends on the GitHub repository, Docker, and access to the published image.
 
 ## Project Status
 
-This is a hands-on DevOps learning project focused on containerization, monitoring, Git, CI automation, and deployment workflows.
+This is a hands-on DevOps learning project focused on containerization, monitoring, Git,
+CI automation, and deployment workflows.
 
 ---
 
@@ -163,7 +189,8 @@ Lekkie narzędzie do monitorowania łączności TCP, uruchamiane w Dockerze.
 - **Walidacja CI:** GitHub Actions
 - **Skrypt aktualizacyjny:** `deploy-update.sh`
 
-Wyniki monitorowania są przechowywane na hoście w pliku `logs/wyniki.log` i zachowują się po ponownym uruchomieniu kontenera.
+Wyniki monitorowania są przechowywane na hoście w pliku `logs/wyniki.log`
+i zachowują się po ponownym uruchomieniu kontenera.
 
 ## Wymagania
 
@@ -183,7 +210,8 @@ Poniższe zmienne środowiskowe można ustawić w lokalnym pliku `.env`:
 | `CHECK_INTERVAL` | `30` | Odstęp między sprawdzeniami w sekundach |
 | `CHECK_TIMEOUT` | `3` | Limit czasu na nawiązanie połączenia w sekundach |
 
-Plik `.env` zawiera ustawienia konkretnego środowiska i nie powinien być dodawany do repozytorium, jeśli przechowuje lokalną konfigurację.
+Plik `.env` zawiera ustawienia konkretnego środowiska i nie powinien być dodawany do repozytorium,
+jeśli przechowuje lokalną konfigurację.
 
 ## Obsługa
 
@@ -229,11 +257,14 @@ Raporty korzystają z historycznych danych zapisanych w `logs/wyniki.log`.
 
 ## Ciągła integracja (CI)
 
-GitHub Actions uruchamia walidację po wypchnięciu zmian do gałęzi `main` oraz dla pull requestów kierowanych do tej gałęzi.
+GitHub Actions uruchamia walidację po wypchnięciu zmian do gałęzi `main` oraz dla pull requestów
+kierowanych do tej gałęzi.
 
 Workflow sprawdza składnię Pythona i poprawność konfiguracji Docker Compose.
 
-Repozytorium aplikacji buduje również obrazy Dockera i publikuje je w GitHub Container Registry (GHCR). Po opublikowaniu nowego obrazu zdarzenie może uruchomić workflow tworzący pull request aktualizujący wersję obrazu w tym repozytorium. Zmiana zostaje wdrożona po scaleniu pull requesta.
+Repozytorium aplikacji buduje również obrazy Dockera i publikuje je w GitHub Container Registry (GHCR).
+Po opublikowaniu nowego obrazu zdarzenie może uruchomić workflow tworzący pull request aktualizujący
+wersję obrazu w tym repozytorium. Zmiana zostaje wdrożona po scaleniu pull requesta.
 
 ## Automatyczne aktualizacje wdrożenia
 
@@ -245,7 +276,8 @@ Skrypt:
 2. Pobiera aktualny stan gałęzi `main`.
 3. Kontroluje historię commitów, aby wykryć nieoczekiwane zmiany.
 4. Sprawdza, czy zmieniły się pliki `compose.yaml` lub `monitor.sh`.
-5. Jeśli zmiany dotyczą tych plików, sprawdza konfigurację Compose, pobiera obraz i wykonuje `docker compose up -d`.
+5. Jeśli zmiany dotyczą tych plików, sprawdza konfigurację Compose, pobiera obraz
+   i wykonuje `docker compose up -d`.
 6. Po pomyślnej aktualizacji zapisuje przetworzony commit.
 
 Ręczne uruchomienie skryptu z katalogu repozytorium:
@@ -262,20 +294,44 @@ Ostatni przetworzony commit jest zapisywany lokalnie na hoście Ubuntu w pliku:
 
 `~/.local/state/network-checker-compose/last-deployed-commit`
 
-Plik dotyczy konkretnego hosta i nie jest śledzony przez Git. Przechowuje stan przetwarzania wdrożenia, a nie wyniki monitorowania.
+Plik dotyczy konkretnego hosta i nie jest śledzony przez Git. Przechowuje stan przetwarzania wdrożenia,
+a nie wyniki monitorowania.
 
 ### Okresowe uruchamianie
 
-Planowane jest skonfigurowanie usługi i timera `systemd`, które będą okresowo uruchamiać skrypt. Ta konfiguracja wymaga jeszcze wykonania na hoście Ubuntu.
+Usługa i timer `systemd` są skonfigurowane na hoście Ubuntu.
+Pliki źródłowe znajdują się w repozytorium w katalogu `systemd/` i są dowiązane z katalogu `/etc/systemd/system/`.
 
-Host musi być włączony i mieć połączenie z siecią, aby sprawdzać i wdrażać aktualizacje. Gdy jest wyłączony, kolejne sprawdzenie może nastąpić dopiero po jego uruchomieniu i wykonaniu timera.
+Timer jest włączony i uruchamia się automatycznie wraz z Ubuntu.
+Pierwsze sprawdzenie aktualizacji następuje około 2 minuty po starcie systemu, a kolejne co 5 minut.
+
+- Usługa: `network-checker-deploy.service`
+- Timer: `network-checker-deploy.timer`
+
+Sprawdzenie harmonogramu timera:
+
+```bash
+systemctl list-timers network-checker-deploy.timer
+```
+
+Sprawdzenie logów usługi:
+
+```bash
+journalctl -u network-checker-deploy.service --no-pager
+```
+
+Host musi być włączony i połączony z siecią, aby sprawdzać i wdrażać aktualizacje.
+Gdy jest wyłączony, sprawdzanie zostaje wznowione po kolejnym uruchomieniu systemu.
 
 ## Ograniczenia
 
-- Monitorowanie i automatyczne sprawdzanie aktualizacji są możliwe tylko wtedy, gdy host jest włączony i połączony z siecią.
-- Narzędzie sprawdza łączność TCP na porcie 443; nie weryfikuje pełnej sprawności aplikacji ani strony internetowej.
+- Monitorowanie i automatyczne sprawdzanie aktualizacji są możliwe tylko wtedy, gdy host jest włączony
+  i połączony z siecią.
+- Narzędzie sprawdza łączność TCP na porcie 443; nie weryfikuje pełnej sprawności aplikacji
+  ani strony internetowej.
 - Automatyzacja wdrożeń wymaga dostępu do GitHuba, Dockera i opublikowanego obrazu.
 
 ## Status projektu
 
-Jest to praktyczny projekt edukacyjny DevOps obejmujący konteneryzację, monitorowanie, Git, automatyzację CI oraz proces wdrażania zmian.
+Jest to praktyczny projekt edukacyjny DevOps obejmujący konteneryzację, monitorowanie, Git,
+automatyzację CI oraz proces wdrażania zmian.
