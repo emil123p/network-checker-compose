@@ -126,6 +126,20 @@ The last processed commit is stored locally on the Ubuntu host at:
 This file is specific to the host and is not tracked by Git.
 It records the deployment script's processing state; it is not a monitoring log.
 
+### Host-local configuration and secrets
+
+Some deployment-related files are stored outside the Git repository because they contain host-specific state
+or sensitive credentials.
+
+- `~/.local/state/network-checker-compose/last-deployed-commit` — records the last processed deployment commit.
+- `~/.config/network-checker-compose/email.env` — stores Gmail SMTP credentials used for email notifications.
+This file must never be committed to Git or shared publicly.
+
+The configuration directory should have permissions `700`, and `email.env` should have permissions `600`,
+restricting access to the owner.
+
+These files are local to the Ubuntu host and are not tracked by Git.
+
 ### Periodic execution
 
 A `systemd` service and timer are configured on the Ubuntu host.
@@ -296,6 +310,21 @@ Ostatni przetworzony commit jest zapisywany lokalnie na hoście Ubuntu w pliku:
 
 Plik dotyczy konkretnego hosta i nie jest śledzony przez Git. Przechowuje stan przetwarzania wdrożenia,
 a nie wyniki monitorowania.
+
+### Lokalna konfiguracja i dane poufne
+
+Niektóre pliki związane z wdrożeniem są przechowywane poza repozytorium Git,
+ponieważ zawierają stan konkretnego hosta lub poufne dane logowania.
+
+- `~/.local/state/network-checker-compose/last-deployed-commit` — przechowuje informację
+  o ostatnim przetworzonym commicie wdrożenia.
+- `~/.config/network-checker-compose/email.env` — przechowuje dane logowania Gmail SMTP wykorzystywane
+  do wysyłania powiadomień e-mail. Tego pliku nie wolno dodawać do Git ani udostępniać publicznie.
+
+Katalog konfiguracyjny powinien mieć uprawnienia `700`, a plik `email.env` — `600`.
+Ogranicza to dostęp do właściciela.
+
+Pliki te są lokalne dla hosta Ubuntu i nie są śledzone przez Git.
 
 ### Okresowe uruchamianie
 
