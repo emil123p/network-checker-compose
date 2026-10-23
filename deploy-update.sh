@@ -84,31 +84,36 @@ ROLLBACK
 health_check() {
     local baseline="$1"
     local compose_file="$2"
-    local container_id
-    local running
-    local current_lines
-    local attempt
+    local expected_image="$3"
+    local container_id running current_image current_lines attempt
 
     for attempt in $(seq 1 30); do
-        container_id=$(docker compose --project-directory "$PROJECT_DIR" -f "$compose_file" ps -q network-checker 2>/dev/null || true)
+        container_id=$(docker compose \
+            --project-directory "$PROJECT_DIR" \
+            -f "$compose_file" ps -q network-checker 2>/dev/null || true)
+
         running="false"
+        current_image=""
 
         if [ -n "$container_id" ]; then
-            running=$(docker inspect -f '{{.State.Running}}' "$container_id" 2>/dev/null || echo false)
+            running=$(docker inspect -f '{{.State.Running}}' \
+                "$container_id" 2>/dev/null || echo false)
+            current_image=$(docker inspect -f '{{.Config.Image}}' \
+                "$container_id" 2>/dev/null || true)
         fi
 
         current_lines=$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)
 
-        if [ "$running" = "true" ] && [ "$current_lines" -gt "$baseline" ]; then
+        if [ "$running" = "true" ] \
+            && [ "$current_image" = "$expected_image" ] \
+            && [ "$current_lines" -gt "$baseline" ]; then
             return 0
         fi
 
         sleep 2
     done
-
     return 1
 }
-
 rollback() {
     echo "Rozpoczynam przywracanie poprzedniej wersji..."
 
@@ -119,7 +124,7 @@ rollback() {
         --project-directory "$PROJECT_DIR" \
         -f "$STATE_DIR/rollback-compose.yaml" \
         up -d --force-recreate \
-        && health_check "$baseline" "$STATE_DIR/rollback-compose.yaml"; then
+        && health_check "$baseline" "$STATE_DIR/rollback-compose.yaml" "$PREVIOUS_IMAGE"; then
         echo "Rollback zakończony: poprzednia wersja działa."
     else
         echo "ALARM: rollback nie powiódł się lub kontrola zdrowia nie przeszła."
@@ -131,6 +136,12 @@ rollback() {
 }
 
 git merge --ff-only origin/main
+
+NEW_IMAGE=$(sed -n 's/^[[:space:]]*image:[[:space:]]*//p' compose.yaml)
+if [ -z "$NEW_IMAGE" ] || [ "$(printf '%s\n' "$NEW_IMAGE" | wc -l)" -ne 1 ]; then
+    echo "Błąd: nie można jednoznacznie ustalić nowego obrazu."
+    rollback
+fi
 
 if ! docker compose config -q; then
     echo "Błąd konfiguracji Compose."
@@ -149,7 +160,7 @@ if ! docker compose up -d --force-recreate; then
     rollback
 fi
 
-if ! health_check "$BASELINE" "$PROJECT_DIR/compose.yaml"; then
+if ! health_check "$BASELINE" "$PROJECT_DIR/compose.yaml" "$NEW_IMAGE"; then
     echo "Błąd: nowa wersja nie przeszła kontroli zdrowia."
     rollback
 fi
