@@ -166,6 +166,28 @@ journalctl -u network-checker-deploy.service --no-pager
 The host must be powered on and connected to the network for updates to be checked and deployed.
 If it is powered off, checks resume after the next startup.
 
+### Deployment failure notifications
+
+If `network-checker-deploy.service` fails, systemd triggers `network-checker-notify-failure.service`,
+which runs `scripts/notify-deployment-failure.py` and sends an email through Gmail SMTP.
+
+The notification includes the host name, UTC timestamp, and a command for inspecting deployment logs.
+It indicates a deployment process failure; it does not necessarily mean the application itself is unavailable.
+
+Inspect deployment logs:
+
+```bash
+sudo journalctl -u network-checker-deploy.service --no-pager
+```
+
+Check the notification service:
+
+```bash
+sudo systemctl status network-checker-notify-failure.service --no-pager
+```
+
+SMTP credentials are stored outside the repository in `~/.config/network-checker-compose/email.env`. Never commit or share this file.
+
 ## Limitations
 
 - Monitoring and automatic deployment checks are available only while the host is running
@@ -351,6 +373,30 @@ journalctl -u network-checker-deploy.service --no-pager
 
 Host musi być włączony i połączony z siecią, aby sprawdzać i wdrażać aktualizacje.
 Gdy jest wyłączony, sprawdzanie zostaje wznowione po kolejnym uruchomieniu systemu.
+
+### Powiadomienia o błędach wdrożenia
+
+Jeśli `network-checker-deploy.service` zakończy się błędem, systemd uruchamia
+`network-checker-notify-failure.service`, która wykonuje skrypt `scripts/notify-deployment-failure.py`
+i wysyła e-mail przez Gmail SMTP.
+
+Powiadomienie zawiera nazwę hosta, czas UTC oraz polecenie umożliwiające sprawdzenie logów wdrożenia.
+Oznacza błąd procesu wdrażania, ale nie musi oznaczać, że sama aplikacja jest niedostępna.
+
+Wyświetlenie logów wdrożenia:
+
+```bash
+sudo journalctl -u network-checker-deploy.service --no-pager
+```
+
+Sprawdzenie usługi powiadomień:
+
+```bash
+sudo systemctl status network-checker-notify-failure.service --no-pager
+```
+
+Dane SMTP są przechowywane poza repozytorium w pliku `~/.config/network-checker-compose/email.env`.
+Nie wolno dodawać tego pliku do Git ani go udostępniać.
 
 ## Ograniczenia
 
