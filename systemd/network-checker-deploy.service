@@ -1,5 +1,6 @@
 [Unit]
 Description=Check and deploy Network Checker Compose updates
+OnFailure=network-checker-notify-failure.service
 Wants=network-online.target
 After=network-online.target snap.docker.dockerd.service
 

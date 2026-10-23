@@ -1,0 +1,9 @@
+[Unit]
+Description=Send email notification about deployment failure
+
+[Service]
+Type=oneshot
+User=emil-paziuk
+Environment=HOME=/home/emil-paziuk
+EnvironmentFile=/home/emil-paziuk/.config/network-checker-compose/email.env
+ExecStart=/usr/bin/python3 /home/emil-paziuk/network-checker-compose/scripts/notify-deployment-failure.py
