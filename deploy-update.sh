@@ -66,6 +66,7 @@ esac
 git show "$DEPLOYED:monitor.sh" > "$STATE_DIR/previous-monitor.sh"
 
 cat > "$STATE_DIR/rollback-compose.yaml" <<ROLLBACK
+name: network-checker-compose
 services:
   network-checker:
     image: $PREVIOUS_IMAGE
