@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+# Network Checker musi korzystać wyłącznie z Docker Snap.
+docker() {
+    command docker --context default "$@"
+}
+
 PROJECT_DIR="/home/emil-paziuk/network-checker-compose"
 STATE_DIR="/home/emil-paziuk/.local/state/network-checker-compose"
 STATE_FILE="$STATE_DIR/last-deployed-commit"
