@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from statistics import mean, median
 import sys
+import gzip
 
 LOG_FILE = Path("logs/wyniki.log")
 
@@ -15,38 +16,50 @@ def main():
     now = datetime.now(timezone.utc)
     cutoff = now - period
 
-    if not LOG_FILE.exists():
-        print(f"Nie znaleziono pliku: {LOG_FILE}")
-        return
-
     records = []
     response_times = []
 
-    with LOG_FILE.open("r", encoding="utf-8") as file:
-        for line in file:
-            try:
-                timestamp = datetime.fromisoformat(line.split()[0])
-            except (ValueError, IndexError):
-                continue
+    log_files = sorted(LOG_FILE.parent.glob(f"{LOG_FILE.name}*"))
 
-            if not cutoff <= timestamp <= now:
-                continue
+    if not log_files:
+        print(f"Nie znaleziono plików logów: {LOG_FILE}")
+        return
 
-            if "status=OK" in line:
-                status = "OK"
-                for part in line.split():
-                    if part.startswith("response_ms="):
-                        try:
-                            response_times.append(float(part.split("=", 1)[1]))
-                        except ValueError:
-                            pass
-                        break
-            elif "status=FAIL" in line:
-                status = "FAIL"
-            else:
-                continue
+    for log_file in log_files:
+        if log_file.suffix == ".gz":
+            log_reader = gzip.open(log_file, "rt", encoding="utf-8")
+        else:
+            log_reader = log_file.open("r", encoding="utf-8")
 
-            records.append((timestamp, status))
+        with log_reader as file:
+            for line in file:
+                try:
+                    timestamp = datetime.fromisoformat(line.split()[0])
+                except (ValueError, IndexError):
+                    continue
+
+                if not cutoff <= timestamp <= now:
+                    continue
+
+                if "status=OK" in line:
+                    status = "OK"
+                    for part in line.split():
+                        if part.startswith("response_ms="):
+                            try:
+                                response_times.append(
+                                    float(part.split("=", 1)[1])
+                                )
+                            except ValueError:
+                                pass
+                            break
+
+                elif "status=FAIL" in line:
+                    status = "FAIL"
+                else:
+                    continue
+
+                records.append((timestamp, status))
+
     records.sort(key=lambda record: record[0])
 
     # Wykrywanie przerw w monitoringu

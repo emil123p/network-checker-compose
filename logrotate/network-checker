@@ -1,0 +1,10 @@
+/home/emil-paziuk/network-checker-compose/logs/wyniki.log {
+    daily
+    rotate 7
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su emil-paziuk emil-paziuk
+}
