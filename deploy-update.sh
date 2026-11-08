@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Network Checker musi korzystać wyłącznie z Docker Snap.
+# Network Checker korzysta z Docker Engine APT.
 docker() {
-    command docker --context default "$@"
+    command docker --context docker-engine "$@"
 }
 
 PROJECT_DIR="/home/emil-paziuk/network-checker-compose"
