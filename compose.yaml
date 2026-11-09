@@ -7,6 +7,6 @@ services:
       CHECK_INTERVAL: ${CHECK_INTERVAL:-30}
       CHECK_TIMEOUT: ${CHECK_TIMEOUT:-3}
     volumes:
-      - ./logs:/app/logs
+      - ${NETWORK_CHECKER_LOG_DIR:-./logs}:/app/logs
       - ./monitor.sh:/app/monitor.sh:ro
     restart: unless-stopped

@@ -1,0 +1,10 @@
+@PLATFORM_DIR@/data/network-checker/logs/wyniki.log {
+    daily
+    rotate 7
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su @HOST_USER@ @HOST_GROUP@
+}
